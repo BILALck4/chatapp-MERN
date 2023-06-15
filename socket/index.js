@@ -19,29 +19,43 @@ const getUser = (userId) => {
   return users.find((user) => user.userId === userId);
 };
 
-io.on("connection", (socket) => {
-  //when ceonnect
-  console.log("a user connected.");
+// Créez une instance du sujet observé (ChatSystem)
+const ChatSystem = require("./ChatSystem");
+const chatSystem = new ChatSystem();
 
-  //take userId and socketId from user
+io.on("connection", (socket) => {
+  // When connect
+  console.log("A user connected.");
+
+  // Take userId and socketId from user
   socket.on("addUser", (userId) => {
     addUser(userId, socket.id);
+
+    // Add the observer (client) to the chatSystem
+    chatSystem.subscribe(socket);
+
     io.emit("getUsers", users);
   });
 
-  //send and get message
+  // Send and get message
   socket.on("sendMessage", ({ senderId, receiverId, text }) => {
     const user = getUser(receiverId);
     io.to(user.socketId).emit("getMessage", {
       senderId,
       text,
     });
+
+    // Notify the observers (clients) with the message
+    chatSystem.notify({ senderId, receiverId, text });
   });
 
-  //when disconnect
+  // When disconnect
   socket.on("disconnect", () => {
-    console.log("a user disconnected!");
+    console.log("A user disconnected!");
     removeUser(socket.id);
     io.emit("getUsers", users);
+
+    // Remove the observer (client) from the chatSystem
+    chatSystem.unsubscribe(socket);
   });
 });

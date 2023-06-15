@@ -1,6 +1,9 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
 import "./chatOnline.css";
+import { ChatObserver } from "../../observers/ChatObserver";
+
+const chatObserver = new ChatObserver();
 
 export default function ChatOnline({ onlineUsers, currentId, setCurrentChat }) {
   const [friends, setFriends] = useState([]);
@@ -18,7 +21,10 @@ export default function ChatOnline({ onlineUsers, currentId, setCurrentChat }) {
 
   useEffect(() => {
     setOnlineFriends(friends.filter((f) => onlineUsers.includes(f._id)));
-  }, [friends, onlineUsers]);
+
+    // Notify the observer of the updated online friends
+    chatObserver.update(onlineFriends);
+  }, [friends, onlineUsers, onlineFriends]);
 
   const handleClick = async (user) => {
     try {
@@ -26,6 +32,9 @@ export default function ChatOnline({ onlineUsers, currentId, setCurrentChat }) {
         `/conversations/find/${currentId}/${user._id}`
       );
       setCurrentChat(res.data);
+
+      // Notify the observer of the updated online friends
+      chatObserver.update(onlineFriends);
     } catch (err) {
       console.log(err);
     }
