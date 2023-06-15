@@ -40,7 +40,7 @@ shell
 
 cd ../client
 npm install
-###Configuration
+## Configuration
 Create a .env file in the api directory and add the following environment variables:
 env
 
